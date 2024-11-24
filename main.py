@@ -44,22 +44,24 @@ def first_part():
 
 def second_part(frequency_table, total_elements, N):
     sample = [key for key, value in frequency_table.items() for _ in range(value)]
-    sample_mean = total_elements / N
+    sample_sred = total_elements / N
 
-    theoretical_expectation = sum(key * (value / N) for key, value in frequency_table.items())
-    theoretical_variance = sum(((key - theoretical_expectation) ** 2) * (value / N) for key, value in frequency_table.items())
+    math_exp = sum(key * (value / N) for key, value in frequency_table.items())
+    disper = sum(((key - math_exp) ** 2) * (value / N) for key, value in frequency_table.items())
 
-    sample_variance = np.var(sample, ddof=1)
+    sample_disper = np.var(sample, ddof=1)
     median = np.median(sample)
-    range_value = max(sample) - min(sample)
+    range_val = max(sample) - min(sample)
 
     print("\nЧисловые характеристики:")
-    print(f"Теоретическое математическое ожидание (E[η]): {theoretical_expectation}")
-    print(f"Теоретическая дисперсия (D[η]): {theoretical_variance}")
-    print(f"Выборочное среднее (x̄): {sample_mean}")
-    print(f"Выборочная дисперсия (S²): {sample_variance}")
+    print(f"Математическое ожидание (E[η]): {math_exp}")
+    print(f"Выборочное среднее (x̄): {sample_sred}")
+
+    print(f"Дисперсия (D[η]): {disper}")
+    print(f"Выборочная дисперсия (S²): {sample_disper}")
+    
     print(f"Медиана (Me): {median}")
-    print(f"Размах (R): {range_value}")
+    print(f"Размах (R): {range_val}")
 
 
 def build_graphs_and_calculate_d(frequency_table, N, P):
