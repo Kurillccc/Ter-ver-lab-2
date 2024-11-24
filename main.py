@@ -1,6 +1,7 @@
 import random
 import math
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 def first_part():
@@ -54,11 +55,16 @@ def second_part(frequency_table, total_elements, N):
     range_val = max(sample) - min(sample)
 
     print("\nЧисловые характеристики:")
+
     print(f"Математическое ожидание (E[η]): {math_exp}")
     print(f"Выборочное среднее (x̄): {sample_sred}")
+    res = math_exp - sample_sred
+    print(f"|E[η] - x̄| : {abs(res)}")
 
     print(f"Дисперсия (D[η]): {disper}")
     print(f"Выборочная дисперсия (S²): {sample_disper}")
+    res = disper - sample_disper
+    print(f"|D[η] - S²| : {abs(res)}")
     
     print(f"Медиана (Me): {median}")
     print(f"Размах (R): {range_val}")
@@ -99,8 +105,37 @@ def build_graphs_and_calculate_d(frequency_table, N, P):
     D = max(abs(theoretical_cdf.get(xi, 0) - empirical_cdf.get(xi, 0)) for xi in x)
     print(f"\nМера расхождения D: {D}")
 
+# Вычислить теоретические вероятности, отклонения и максимальное отклонение.
+def compute_deviations(frequency_table, N, P):
+    ter_ver = {}
+    deviations = {}
+
+    # Вычисляем теоретические вероятности
+    for yj in frequency_table:
+        ter_ver[yj] = (1 - P) ** (yj - 1) * P
+    # relative_frequency - относительная частота
+    # Вычисляем отклонения nj / n - P({η = yj})
+    for yj, nj in frequency_table.items():
+        relative_frequency = nj / N  # nj / n
+        deviations[yj] = relative_frequency - ter_ver[yj]
+
+    # Максимальное отклонение
+    max_deviation = max(abs(dev) for dev in deviations.values())
+
+    print("\nТаблица отклонений:")
+    print("yj\t\tnj\t\tP({η = yj})\t\tnj/n\t\tОтклонение")
+    for yj, nj in frequency_table.items():
+        print(f"{yj}\t\t{nj}\t\t{ter_ver[yj]:.5f}\t\t{nj / N:.5f}\t\t{deviations[yj]:.5f}")
+
+    print(f"\nМаксимальное отклонение: {max_deviation:.5f}")
+
+# def third_part()
 
 if __name__ == "__main__":
     frequency_table, total_elements, N, P = first_part()
+
     second_part(frequency_table, total_elements, N)
+    compute_deviations(frequency_table, N, P)
     build_graphs_and_calculate_d(frequency_table, N, P)
+
+
