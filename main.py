@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from scipy.stats import chi2
 
+
 def first_part():
     # Ввод данных
     N = int(input("Введите кол-во экспериментов N: "))
@@ -39,21 +40,24 @@ def first_part():
     # Таблица частот
     print("\nТаблица частот значений количества чисел в последовательностях:")
     print("Значение\tNi\tЧастота")
-    frequency_table = dict(sorted(frequency_table.items()))
     for key, value in frequency_table.items():
         print(f"{key}\t\t{value}\t{value / N}")
+
     return frequency_table, total_elements, N, P
 
 
-def second_part(frequency_table, total_elements, N, P):
+def second_part(frequency_table, total_elements, N):
     sample = [key for key, value in frequency_table.items() for _ in range(value)]
     sample_sred = total_elements / N
 
-    math_exp = 1 / P # sum(key * (value / N) for key, value in frequency_table.items())
-    disper = (1 - P) / (P**2)
+    math_exp = sum(key * (value / N) for key, value in frequency_table.items())
+    disper = sum(((key - math_exp) ** 2) * (value / N) for key, value in frequency_table.items())
 
     sample_disper = np.var(sample, ddof=1)
-    median = np.median(sample)
+    sorted_sample = sorted(sample)
+    median = sorted_sample[len(sorted_sample) // 2] if len(sorted_sample) % 2 != 0 else \
+        (sorted_sample[len(sorted_sample) // 2 - 1] + sorted_sample[len(sorted_sample) // 2]) / 2
+
     range_val = max(sample) - min(sample)
 
     print("\nЧисловые характеристики:")
@@ -67,7 +71,7 @@ def second_part(frequency_table, total_elements, N, P):
     print(f"Выборочная дисперсия (S²): {sample_disper}")
     res = disper - sample_disper
     print(f"|D[η] - S²| : {abs(res)}")
-    
+
     print(f"Медиана (Me): {median}")
     print(f"Размах (R): {range_val}")
 
@@ -78,29 +82,25 @@ def build_graphs_and_calculate_d(frequency_table, N, P):
 
     # Теоретическая функция распределения
     cumulative_prob = 0.0
-    n = 0
-    epsilon = 1e-6  # Порог близости к 1
-    while cumulative_prob < 1 - epsilon:
-        n += 1
-        cumulative_prob = 1 - (1 - P) ** n
-        theoretical_cdf[n] = cumulative_prob
+    for key in sorted(frequency_table.keys()):
+        prob = (1 - P) ** (key - 1) * P
+        cumulative_prob += prob
+        theoretical_cdf[key] = cumulative_prob
 
-    # Эмпирическая функция распределения из таблицы частот
+    # Эмпирическая функция распределения
     cumulative_count = 0
-    empirical_cdf[0] = 0  # Добавляем точку в начале для графика
     for key in sorted(frequency_table.keys()):
         cumulative_count += frequency_table[key]
         empirical_cdf[key] = cumulative_count / N
 
-    # После последнего значения продолжаем ECDF с уровнем 1
-    last_key = max(empirical_cdf.keys())
-    empirical_cdf[last_key + 1] = 1.0
-
     # Построение графиков
     x = sorted(set(theoretical_cdf.keys()).union(empirical_cdf.keys()))
     theoretical_y = [theoretical_cdf.get(i, 0) for i in x]
-    last_empirical_value = empirical_cdf.get(max(empirical_cdf.keys()), 1.0)
-    empirical_y = [empirical_cdf.get(i, last_empirical_value) for i in x]
+    empirical_y = [empirical_cdf.get(i, 0) for i in x]
+
+    # Вычисление меры расхождения D
+    D = max(abs(theoretical_cdf.get(xi, 0) - empirical_cdf.get(xi, 0)) for xi in x)
+    print(f"\nМера расхождения D: {D}")
 
     plt.step(x, theoretical_y, where="post", label="Теоретическая CDF")
     plt.step(x, empirical_y, where="post", label="Эмпирическая CDF", linestyle="--")
@@ -111,14 +111,6 @@ def build_graphs_and_calculate_d(frequency_table, N, P):
     plt.grid()
     plt.show()
 
-    # Вычисление меры расхождения D
-    D = max(abs(theoretical_cdf.get(xi, 0) - empirical_cdf.get(xi, 0)) for xi in x)
-    print(f"\nМера расхождения D: {D}")
-
-
-
-
-# Вычислить теоретические вероятности, отклонения и максимальное отклонение.
 def compute_deviations(frequency_table, N, P):
     ter_ver = {}
     deviations = {}
@@ -141,7 +133,6 @@ def compute_deviations(frequency_table, N, P):
         print(f"{yj}\t\t{nj}\t\t{ter_ver[yj]:.5f}\t\t{nj / N:.5f}\t\t{deviations[yj]:.5f}")
     # неправильное отклонение графиков а также там должен второй график к 1 идти и еще в первом нужно чтобы нормально шагал
     print(f"\nМаксимальное отклонение: {max_deviation:.5f}")
-
 
 # третья часть
 def input_intervals():
@@ -216,11 +207,11 @@ def chi_square_test(frequency_table, k, z_values, q_values, N, alpha):
 
 
 if __name__ == "__main__":
-    frequency_table, total_elements, N, P = first_part()
-
-    second_part(frequency_table, total_elements, N, P)
-    compute_deviations(frequency_table, N, P)
-    build_graphs_and_calculate_d(frequency_table, N, P)
+    # frequency_table, total_elements, N, P = first_part()
+    #
+    # second_part(frequency_table, total_elements, N)
+    # compute_deviations(frequency_table, N, P)
+    # build_graphs_and_calculate_d(frequency_table, N, P)
 
     # Часть 3
     k, z_values = input_intervals()
@@ -233,3 +224,6 @@ if __name__ == "__main__":
 
     # Проверка гипотезы
     chi_square_test(frequency_table, k, z_values, q_values, N, alpha)
+
+
+   # поменять медиану и меру расхохжения чтобы норм все было и графики пофиксить
