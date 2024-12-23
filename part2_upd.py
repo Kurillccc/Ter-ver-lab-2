@@ -2,11 +2,15 @@ import random, math
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
+
 N = int(input("Введите количество экспериментов N: "))
 p = float(input("Введите вероятность генерации заданного числа P: "))
 
 i = 1
 x = [] # количество использованных отливок для каждого эксперимента
+ver_x = []
 y = []
 ni = []
 ver = []
@@ -18,9 +22,10 @@ while i <= N:
         t += 1
         a = random.uniform(0, 1)
     x.append(t)
+    ver_x.append(t/N)
     i += 1
 
-print(f"yi\tni\tni/N")
+print(f"\nyi\tni\tni/N")
 j = 1
 while j <= max(x):
     t = x.count(j)
@@ -78,13 +83,31 @@ max_o = 0
 print(f"\nyi\tP(n = yi)\tni/N")
 for i in range(0, len(y)):
     q = P[y[i] - 1]
-    ver_max += sum(P[:y[i]])
-    if abs(ver_max - ver[i]) > max_o:
-        max_o = abs(ver_max - ver[i])
-        ii = i
     print(f"{y[i]}\t{round(q, 10)}\t{ver[i]}")
 
-print("\nМаксимальное отклонение: ", round(max_o, 10), " при  yi = ", y[ii])
+Fv = []
+F = 0
+j = 1
+for i in range(0, len(y)):
+    while j <= y[len(y) - 1]:
+        if j == y[i]:
+            F += ver[i]
+            Fv.append(F)
+            j += 1
+            break
+        else:
+            Fv.append(F)
+            j += 1
+
+ii = 0
+max_o = 0
+for i in range(0, len(Fv)):
+    raz = max(Ft[i], Fv[i]) - min(Ft[i], Fv[i])
+    if raz > max_o:
+        max_o = raz
+        ii = i
+
+print("\nМаксимальное отклонение: ", round(max_o, 10), "при х =", tries[ii])
 
 
 plt.figure(figsize=(10, 6))
@@ -98,6 +121,7 @@ for i in range(0, len(tries)):
     kk = [tries[i], tries[i] + 1]
     plt.plot(kk, F, color='b')
 
+
 # Построение выборочной ф р
 kk = [-1, y[0]]
 F = [0, 0]
@@ -110,10 +134,14 @@ for i in range(0, len(y)):
         kk = [y[i], y[i] + 1]
     else: kk = [y[i], y[i + 1]]
     plt.plot(kk, F, color='g')
+
+kk = [y[-1] + 1, y[-1] + 100]
+F = [a, a]
+plt.plot(kk, F, color='g', linestyle='-')
 plt.title('Функция распределения')
 plt.xlabel('Количество попыток')
 plt.ylabel('Вероятность')
-plt.xticks(kk)  # Отображение всех значений на оси X
+plt.xticks(tries)  # Отображение всех значений на оси X
 plt.xlim(0, tries[len(tries) - 1] + 1)
 plt.ylim(0, 1.2)
 plt.axhline(y=0, color='k', linestyle='--', linewidth=0.7)
